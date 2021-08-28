@@ -1,6 +1,9 @@
 name: 'MS Teams Deploy Card'
 description: 'Simple deploy card for microsoft teams via webhook connector'
 inputs:
+  webhook_url:
+    description: MS Teams webhook connector url
+    required: true
   environment:
     description: deployment stage e.g. production
     required: false
