@@ -71,7 +71,7 @@ runs:
         echo "::set-output name=potentialActions::".implode(',', $potentialActions).PHP_EOL;     
 
 
-    - shell: "curl -d @{0} ${{ inputs.webhook_url }}"
+    - shell: curl -d @{0} ${{ inputs.webhook_url }}
       name: send payload to teams
       run: |
         {
