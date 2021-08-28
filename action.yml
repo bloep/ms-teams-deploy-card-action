@@ -25,79 +25,78 @@ runs:
       run: |
         <?php
         $color = "${{ job.status }}" === 'success' ? '00ff00' : 'ff0000';
-        echo "::set-output name=color::".$color.PHP_EOL;
-
         $timestamp = (new DateTime("${{ github.event.head_commit.timestamp }}"))->format('d.m.Y H:i:s');
-        echo "::set-output name=timestamp::".$timestamp.PHP_EOL;
-
         $branch = str_replace('refs/heads/', '',"${{ github.ref }}");
-        echo "::set-output name=branch::".$branch.PHP_EOL;
 
-        $facts = [];
+        $facts = [
+            [
+                "name" => "Status",
+                "value" => "${{ job.status }}",
+            ],
+            [
+                "name" => "Commit",
+                "value" => "[${{ github.sha }}](https://github.com/${{ github.repository }}/commit/${{ github.sha }})",
+                "markdown": true,
+            ],
+            [
+                "name" => "Commit Message",
+                "value" => "${{ github.event.head_commit.message }}",
+            ],
+            [
+                "name" => "Branch",
+                "value" => "[".$branch."](https://github.com/${{ github.repository }}/tree/".$branch.")",
+            ],
+        ];
+        $potentialActions = [];
+
         $environment = trim("${{ inputs.environment }}");
         if ($environment) {
-          $facts[] = json_encode(['name' => 'Environment', 'value' => $environment]);
+            $facts[] = json_encode(['name' => 'Environment', 'value' => $environment]);
         }
 
         $tenant = trim("${{ inputs.tenant }}");
         if ($tenant) {
-          $facts[] = json_encode(['name' => 'Tenant', 'value' => $tenant]);
+            $facts[] = json_encode(['name' => 'Tenant', 'value' => $tenant]);
         }
 
         $project_url = trim("${{ inputs.project_url }}");
         if ($project_url) {
-          $facts[] = json_encode(['name' => 'Project Url', 'value' => $project_url]);
+            $facts[] = json_encode(['name' => 'Project Url', 'value' => $project_url]);
         }
 
-        if (count($facts) > 0) {
-          array_unshift($facts, '');
-        }
-
-        echo "::set-output name=facts::".implode(',', $facts).PHP_EOL;     
-
-        $potentialActions = [];
         if($project_url) {
-            $potentialActions[] = json_encode([
-              "@type" => "OpenUri",
-              "name" => "Open in Browser",
-              "targets" => [
-                [
-                    "os" => "default",
-                    "uri" => $project_url
+            $potentialActions[] = [
+                "@type" => "OpenUri",
+                "name" => "Open in Browser",
+                "targets" => [
+                    [
+                        "os" => "default",
+                        "uri" => $project_url
+                    ]
                 ]
-              ]
-            ]);
+            ];
         }
-        echo "::set-output name=potentialActions::".implode(',', $potentialActions).PHP_EOL;     
 
+        $payload = json_encode([
+            "@type" => "MessageCard",
+            "@context" => "http://schema.org/extensions",
+            "themeColor" => $color,
+            "summary" => "deployment-bot",
+            "sections" => [
+                [
+                    "activityTitle" => "Deployment for [${{ github.repository }}](https://github.com/${{ github.repository }})",
+                    "activitySubtitle" => "by [@${{ github.event.sender.login }}](https://github.com/${{ github.event.sender.login }}) on ".$timestamp,
+                    "activityImage" => "${{ github.event.sender.avatar_url }}",
+                    "facts" => $facts,
+                    "markdown" =>  true,
+                ],
+            ],
+            "potentialAction": $potentialActions,
+        ]);
 
-    - shell: curl -d @{0} ${{ inputs.webhook_url }}
-      name: send payload to teams
-      run: |
-        {
-            "@type": "MessageCard",
-            "@context": "http://schema.org/extensions",
-            "themeColor": "${{ steps.formatter.outputs.color }}",
-            "summary": "deployment-bot",
-            "sections": [{
-                "activityTitle": "Deployment for [${{ github.repository }}](https://github.com/${{ github.repository }})",
-                "activitySubtitle": "by [@${{ github.event.sender.login }}](https://github.com/${{ github.event.sender.login }}) on ${{ steps.formatter.outputs.timestamp }}",
-                "activityImage": "${{ github.event.sender.avatar_url }}",
-                "facts": [{
-                    "name": "Status",
-                    "value": "${{ job.status }}"
-                }, {
-                    "name": "Commit",
-                    "value": "[${{ github.sha }}](https://github.com/${{ github.repository }}/commit/${{ github.sha }})",
-                    "markdown": true
-                }, {
-                    "name": "Commit Message",
-                    "value": "${{ github.event.head_commit.message }}"
-                }, {
-                    "name": "Branch",
-                    "value": "[${{ steps.formatter.outputs.branch }}](https://github.com/${{ github.repository }}/tree/${{ steps.formatter.outputs.branch }})"
-                } ${{ steps.formatter.outputs.facts }}],
-                "markdown": true
-            }],
-            "potentialAction": [${{ steps.formatter.outputs.potentialActions }}]
-        }
+        $ch = curl_init("${{ inputs.webhook_url }}");
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        echo curl_exec($ch);
+        curl_close($ch);
