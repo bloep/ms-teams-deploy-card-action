@@ -49,17 +49,17 @@ runs:
 
         $environment = trim("${{ inputs.environment }}");
         if ($environment) {
-            $facts[] = json_encode(['name' => 'Environment', 'value' => $environment]);
+            $facts[] = ['name' => 'Environment', 'value' => $environment];
         }
 
         $tenant = trim("${{ inputs.tenant }}");
         if ($tenant) {
-            $facts[] = json_encode(['name' => 'Tenant', 'value' => $tenant]);
+            $facts[] = ['name' => 'Tenant', 'value' => $tenant];
         }
 
         $project_url = trim("${{ inputs.project_url }}");
         if ($project_url) {
-            $facts[] = json_encode(['name' => 'Project Url', 'value' => $project_url]);
+            $facts[] = ['name' => 'Project Url', 'value' => $project_url];
         }
 
         if($project_url) {
