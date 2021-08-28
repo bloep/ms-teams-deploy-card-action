@@ -19,9 +19,7 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - id: formatter
-      name: prepare payload
-      shell: php {0}
+    - shell: php {0}
       run: |
         <?php
         $color = "${{ job.status }}" === 'success' ? '00ff00' : 'ff0000';
