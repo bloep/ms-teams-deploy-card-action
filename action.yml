@@ -34,7 +34,7 @@ runs:
             [
                 "name" => "Commit",
                 "value" => "[${{ github.sha }}](https://github.com/${{ github.repository }}/commit/${{ github.sha }})",
-                "markdown": true,
+                "markdown" => true,
             ],
             [
                 "name" => "Commit Message",
