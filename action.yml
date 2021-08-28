@@ -89,7 +89,7 @@ runs:
                     "markdown" =>  true,
                 ],
             ],
-            "potentialAction": $potentialActions,
+            "potentialAction" => $potentialActions,
         ]);
 
         $ch = curl_init("${{ inputs.webhook_url }}");
