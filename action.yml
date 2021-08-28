@@ -21,7 +21,6 @@ runs:
   steps:
     - id: formatter
       name: prepare payload
-      if: always()
       shell: php {0}
       run: |
         <?php
@@ -74,7 +73,6 @@ runs:
 
     - shell: "curl -d @{0} ${{ inputs.webhook_url }}"
       name: send payload to teams
-      if: always()
       run: |
         {
             "@type": "MessageCard",
