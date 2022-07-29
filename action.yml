@@ -22,6 +22,10 @@ runs:
     - shell: php {0}
       run: |
         <?php
+        $commitMessage = <<<COMMITMESSAGE
+        ${{ github.event.head_commit.message }}
+        COMMITMESSAGE;
+        
         $color = "${{ job.status }}" === 'success' ? '00ff00' : 'ff0000';
         $timestamp = (new DateTime("${{ github.event.head_commit.timestamp }}"))->format('d.m.Y H:i:s');
         $branch = str_replace('refs/heads/', '',"${{ github.ref }}");
@@ -38,7 +42,7 @@ runs:
             ],
             [
                 "name" => "Commit Message",
-                "value" => "${{ github.event.head_commit.message }}",
+                "value" => $commitMessage,
             ],
             [
                 "name" => "Branch",
